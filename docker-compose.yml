@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: citas-db
+    environment:
+      POSTGRES_DB: citasmedicas
+      POSTGRES_USER: citas
+      POSTGRES_PASSWORD: citas
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U citas -d citasmedicas"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    container_name: citas-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://db:5432/citasmedicas
+      DB_USERNAME: citas
+      DB_PASSWORD: citas
+      JWT_SECRET: Z2NpdGFzbWVkaWNhc19ncnVwbzVfY2xhdmVfc2VjcmV0YV9wYXJhX2Rlc2Fycm9sbG8=
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:
